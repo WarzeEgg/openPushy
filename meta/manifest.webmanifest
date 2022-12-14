@@ -5,8 +5,8 @@
     "background_color": "#c2c2c2",
     "display": "fullscreen",
     "orientation": "landscape",
-    "scope": "/",
-    "start_url": "/",
+    "scope": "/openPushy/",
+    "start_url": "/openPushy/",
     "icons": [
         {
           "src": "pushy256.png",
