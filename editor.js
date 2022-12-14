@@ -2,6 +2,7 @@ let editor_tile = 0;
 let editor_held = false;
 let editor_x = 0;
 let editor_y = 0;
+
 Object.keys(tiles).forEach((id) => {
     if (id > 100) {
         return;
@@ -17,31 +18,33 @@ Object.keys(tiles).forEach((id) => {
         });
         this.style.opacity = 0.5;
     };
-    document.body.appendChild(img);
+    document.getElementById('editorContainer').appendChild(img);
 });
 
-cvs.onmousedown = function(event) {
-    editor_x = Math.floor(event.layerX / ts);
-    editor_y = Math.floor(event.layerY / ts);
-
-    level.ld[editor_y][editor_x] = editor_tile;
-    level.render();
-
-    editor_held = true;
-};
-
-cvs.onmouseup = function() {
-    editor_held = false;
-};
-
-cvs.onmousemove = function(event) {
-    editor_x = Math.floor(event.layerX / ts);
-    editor_y = Math.floor(event.layerY / ts);
-
-    if (!editor_held) {
-        return;
+function editorControls() {
+    cvs.onmousedown = function(event) {
+        editor_x = Math.floor(event.layerX / ts);
+        editor_y = Math.floor(event.layerY / ts);
+    
+        level.ld[editor_y][editor_x] = editor_tile;
+        level.render();
+    
+        editor_held = true;
+    };
+    
+    cvs.onmouseup = function() {
+        editor_held = false;
+    };
+    
+    cvs.onmousemove = function(event) {
+        editor_x = Math.floor(event.layerX / ts);
+        editor_y = Math.floor(event.layerY / ts);
+    
+        if (!editor_held) {
+            return;
+        }
+    
+        level.ld[editor_y][editor_x] = editor_tile;
+        level.render();
     }
-
-    level.ld[editor_y][editor_x] = editor_tile;
-    level.render();
 }

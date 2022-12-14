@@ -1,6 +1,33 @@
-const ts = 32; // Tile size
+let ts;
+if (window.innerWidth > 20 * 64 && window.innerHeight > 12 * 64) {
+    ts = 64;
+} else {
+    ts = 32;
+};
+
+const assigned_houses = {
+    51: 'green',
+    52: 'yellow',
+    53: 'orange',
+    54: 'red',
+    55: 'pink',
+    56: 'purple',
+    57: 'blue',
+    58: 'cyan',
+    59: 'gray'
+}
 
 const tiles = {
+    50: 'pushyeditor',
+    51: 'housegreen',
+    52: 'houseyellow',
+    53: 'houseorange',
+    54: 'housered',
+    55: 'housepink',
+    56: 'housepurple',
+    57: 'houseblue',
+    58: 'housecyan',
+    59: 'housegray',
     0: 'empty',
     1: 'wall',
     2: 'house',

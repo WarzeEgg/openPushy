@@ -1,11 +1,23 @@
+let active_pushys = [
+    {color: 'green', controls: ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft']},
+    {color: 'yellow', controls: ['w', 'd', 's', 'a']}
+];
+
+function mobileMove(key) {
+    level.pushys.forEach((pushy) => {
+        pushy.move({key: key});
+    })
+}
+
 class Pushy {
-    constructor(level, x, y, controls, color = 'green') {
+    constructor(level, x, y, controls, color = 'green', hash) {
         this.level = level;
         this.x = x;
         this.y = y;
         this.controls = controls;
         this.orientation = 0;
         this.img = new Image();
+        this.color = color;
         this.img.src = `tiles/pushy${color}.png`;
         this.img.width = ts;
         this.img.height = ts;
@@ -13,20 +25,25 @@ class Pushy {
         this.footprint = false;
         this.electrocuted = false;
         this.cancontrol = true;
+        this.hash = hash;
         con.appendChild(this.img);
         this.render();
         window.addEventListener('keydown', (event) => this.move(event));
     }
     move(event) {
-        if (!this.cancontrol) {
+        if (!this.cancontrol || level.finished || this.hash !== level.hash) {
+
+            if (level.finished && [' ','Enter'].includes(event.key)) {
+                nextLevel();
+            };
             return;
-        }
+        };
 
         // Convert the key stroke to an orientation
         const orientation = this.controls.indexOf(event.key);
         if (orientation === -1) {
             return;
-        }
+        };
 
         // Coordinate changes based on direction
         let diff_x = 0;
@@ -89,8 +106,37 @@ class Pushy {
             case 1: // Wall
                 break;
             case 2: // House
-                can_move = true;
-                will_win = true;
+            case 51: // House of colors
+            case 52:
+            case 53:
+            case 54:
+            case 55:
+            case 56:
+            case 57:
+            case 58:
+            case 59:
+                let correct_house = false;
+                if (target == 2) {
+                    can_move = true;
+                    correct_house = true;
+                } else if (assigned_houses[target] == this.color) {
+                    can_move = true;
+                    correct_house = true;
+                } else {
+                    can_move = false;
+                }
+
+                if (correct_house) {
+                    will_win = true;
+                    for (let y = 0; y < level.ld.length; y ++) {
+                        for (let x = 0; x < level.ld[0].length; x ++) {
+                            // Check for uncleared conditions
+                            if ([11,13,4,104,204,304,6,106,206,306,8,108,208,308].includes(level.ld[y][x])) {
+                                will_win = false;
+                            }
+                        }
+                    };
+                };
                 break;
             case 3: // Box
             case 103: // Occupied box goals by box
@@ -196,6 +242,9 @@ class Pushy {
                 break;
             case 12: // Footprint
                 can_move = true;
+                if (!this.footprint) {
+                    playSound('footprint');
+                };
                 this.footprint = true;
                 break;
             case 13: // Apple
@@ -237,8 +286,7 @@ class Pushy {
         };
         if (will_win) {
             playSound('win');
-            this.cancontrol = false;
-            document.getElementById('winContainer').style.display = 'block';
+            level.finish();
         };
         this.orientation = orientation;
         this.render();
@@ -247,5 +295,8 @@ class Pushy {
         this.img.style.top = this.y * ts + 'px';
         this.img.style.left = this.x * ts + 'px';
         this.img.style.transform = `rotateZ(${this.orientation * 90}deg)`;
+    }
+    destroy() {
+        this.destroy = true;
     }
 }

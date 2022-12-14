@@ -1,98 +1,17 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset='utf-8'>
     <title>openPushy</title>
-    <link rel="icon" type="image/png" href="tiles/pushy.png" />
-    <style>
-        @font-face {
-            font-family: 'ArialBold';
-            src: url(fonts/arialbold.ttf);
-        }
-        @font-face {
-            font-family: 'Arial';
-            src: url(fonts/arial.ttf);
-        }
-        * {
-            user-select: none;
-            margin: 0;
-        }
-        body {
-            background-color: #BBB;
-            margin: 0;
-        }
-        img, canvas {
-            image-rendering: pixelated;
-        }
-        #levelContainer {
-            position: fixed;
-            top: 50vh;
-            left: 50vw;
-            transform: translate(-50%, -50%);
-        }
-        #levelContainer * {
-            position: absolute;
-        }
-        .pushy {
-            transform-origin: center;
-        }
-        #winContainer {
-            position: fixed;
-            width: 320px;
-            height: 256px;
-            top: 50vh;
-            left: 50vw;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            text-align: center;
-            border: 1px solid gray;
-        }
-        h1, h2 {
-            font-family: 'ArialBold';
-        }
-        h2 {
-            margin: 8px;
-            font-size: 32px;
-        }
-        h1 {
-            margin: 4px;
-            margin-bottom: -8px;
-            font-size: 64px;
-        }
-        #ok {
-            border-radius: 0px;
-            outline: 1px solid black;
-            width: 80px;
-            height: 32px;
-            background-color: #C0C0C0;
-        }
-        .green {
-            color: #006C00;
-        }
-        #levelControls {
-            width: 250px;
-            height: 45px;
-            background-color: white;
-            border: 1px solid black;
-            position: fixed;
-            bottom: 30px;
-            z-index: 3;
-            left: 50vw;
-            transform: translateX(-50%);
-        }
-        #levelTitle {
-            text-align: center;
-            font-family: 'Arial';
-            margin: 5px;
-        }
-    </style>
+    <link rel="icon" type="image/png" href="tiles/pushygreen.png" />
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div id="editorContainer"></div>
-    <div id="levelContainer">
-        <canvas id="level"></canvas>
-    </div>
-    <div id="winContainer" style="display: none">
+    <div id="editorContainer" style="display:none"></div>
+    <div id="levelContainer"></div>
+    <div id="winContainer" style="display: none;">
         <h2 class="green">SUPER!</h2>
         <h2>Du hast Level</h2>
         <h1 class="green" id="levelID">1</h1>
@@ -100,13 +19,47 @@
         <button id="ok" onclick="nextLevel()">OK</button>
     </div>
     <div id="levelControls">
-        <h2 id="levelTitle">Level 1</h2>
+        <svg class="levelArrow" onclick="previousLevel()" width="50" height="45">
+            <path d="M0,22.5 50,0 50,45 0,22.5" stroke="black" fill="white"></path>
+        </svg>
+        <h2 id="levelTitle" onclick="goToLevel()">Level 1</h2>
+        <svg class="levelArrow" onclick="nextLevel()" width="50" height="45">
+            <path d="M50,22.5 0,0 0,45 50,22.5" stroke="black" fill="white"></path>
+        </svg>
+    </div>
+    <div id="mobileControls">
+        <div class="row">
+            <button onmousedown="mobileMove('ArrowUp')" ontouchstart="mobileMove('ArrowUp')">
+                <svg width="60" height="60" viewbox="0 0 4 4">
+                    <path d="M2,0 4,2 3,2 3,4 1,4 1,2 0,2" fill="#BBB"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="row">
+            <button onmousedown="mobileMove('ArrowLeft')" ontouchstart="mobileMove('ArrowLeft')">
+                <svg width="60" height="60" viewbox="0 0 4 4">
+                    <path d="M2,0 0,2 2,4 2,3 4,3 4,1 2,1" fill="#BBB"></path>
+                </svg>
+            </button>
+            <button onmousedown="mobileMove('ArrowDown')" ontouchstart="mobileMove('ArrowDown')">
+                <svg width="60" height="60" viewbox="0 0 4 4">
+                    <path d="M2,4 4,2 3,2 3,0 1,0 1,2 0,2" fill="#BBB"></path>
+                </svg>
+            </button>
+            <button onmousedown="mobileMove('ArrowRight')" ontouchstart="mobileMove('ArrowRight')">
+                <svg width="60" height="60" viewbox="0 0 4 4">
+                    <path d="M2,0 4,2 2,4 2,3 0,3 0,1 2,1" fill="#BBB"></path>
+                </svg>
+            </button>
+        </div>
     </div>
     <script src="tile.js"></script>
+    <script src="editor.js"></script> <!--Optional-->
     <script src="audio.js"></script>
+    <script src="levels.js"></script>
     <script src="level.js"></script>
     <script src="pushy.js"></script>
-    <script src="example.js"></script>
-    <script src="editor.js"></script> <!--Optional-->
+    <script src="main.js"></script>
 </body>
+
 </html>

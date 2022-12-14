@@ -1,6 +1,6 @@
 const con = document.getElementById('levelContainer');
-const cvs = document.getElementById('level');
-const ctx = cvs.getContext('2d');
+let cvs;
+let ctx;
 let level;
 
 function generate2Darray(width, height) {
@@ -26,7 +26,14 @@ const load = function() {
 };
 
 class Level {
-    constructor(width, height, leveldata = []) {
+    constructor(leveldata = [[0]]) {
+        con.innerHTML = '';
+        cvs = document.createElement('canvas');
+        cvs.id = 'level';
+        con.appendChild(cvs);
+        ctx = cvs.getContext('2d');
+        const width = leveldata[0].length;
+        const height = leveldata.length;
         cvs.width = width * ts;
         this.width = width;
         con.style.width = width * ts + 'px';
@@ -34,12 +41,29 @@ class Level {
         this.height = height;
         con.style.height = height * ts + 'px';
         this.ld = generate2Darray(width, height);
+        this.pushys = [];
+        this.hash = Math.floor(Math.random() * 1000000);
+        this.finished = false;
         this.portals = {primary: false, secondary: false};
         this.buttonpressed = false;
+        let spawned_pushys = 0;
         if (leveldata.length !== 0) {
             for (let y = 0; y < leveldata.length; y ++) {
                 for (let x = 0; x < leveldata[0].length; x ++) {
                     this.ld[y][x] = leveldata[y][x];
+
+                    // Spawn spots for pushy
+                    if (this.ld[y][x] == 50) {
+                        if (spawned_pushys >= active_pushys.length) {
+                            alert("There are not enough players");
+                        } else {
+                            this.ld[y][x] = 0;
+                            const new_pushy = active_pushys[spawned_pushys];
+                            const pushy = new Pushy(this, x, y, new_pushy.controls, new_pushy.color, this.hash);
+                            this.pushys.push(pushy);
+                            spawned_pushys ++;
+                        }
+                    }
 
                     // Portal indexing
                     if (leveldata[y][x] == 10) {
@@ -55,6 +79,7 @@ class Level {
         this.render();
     }
     update() {
+        const buttonpressedbefore = this.buttonpressed
         this.buttonpressed = false;
         for (let y = 0; y < this.height; y ++) {
             for (let x = 0; x < this.width; x ++) {
@@ -63,6 +88,9 @@ class Level {
                     this.buttonpressed = true;
                 }
             }
+        };
+        if (buttonpressedbefore != this.buttonpressed) {
+            playSound('button');
         };
 
         for (let y = 0; y < this.height; y ++) {
@@ -84,7 +112,31 @@ class Level {
             }
         }
     }
-}
+    export() {
+        // Render pushys as start points
+        this.pushys.forEach((pushy) => {
+            this.ld[pushy.y][pushy.x] = 50;
+        })
+
+        let out = '[';
+        for (let y = 0; y < this.height; y ++) {
+            out += '[';
+            for (let x = 0; x < this.width; x ++) {
+                out += this.ld[y][x];
+                out += ',';
+            }
+            out = out.slice(0, -1);
+            out += '],';
+        }
+        out = out.slice(0, -1);
+        out += ']';
+        console.log(out);
+    }
+    finish() {
+        document.getElementById('winContainer').style.display = 'block';
+        this.finished = true;
+    }
+};
 
 function nextLevel() {
     document.getElementById('winContainer').style.display = 'none';

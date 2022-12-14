@@ -3,6 +3,9 @@ const audio = {
     ball: new Audio('audio/Kugel.wav'),
     apple: new Audio('audio/Apfel.wav'),
     color: new Audio('audio/Fleck.wav'),
+    button: new Audio('audio/Knopf2.wav'),
+    footprint: new Audio('audio/Spur.wav'),
+    gui: new Audio('audio/knopf.wav'),
     win: [
         new Audio('audio/Pushy1.wav'),
         new Audio('audio/Pushy2.wav'),
