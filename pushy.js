@@ -4,6 +4,7 @@ let active_pushys = [
 ];
 
 function mobileMove(key) {
+    document.body.requestFullscreen();
     level.pushys.forEach((pushy) => {
         pushy.move({key: key});
     })
