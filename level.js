@@ -45,6 +45,8 @@ class Level {
         this.hash = Math.floor(Math.random() * 1000000);
         this.finished = false;
         this.portals = {primary: false, secondary: false};
+        this.activering = false;
+        this.connectedrings = [];
         this.buttonpressed = false;
         let spawned_pushys = 0;
         if (leveldata.length !== 0) {
@@ -110,13 +112,23 @@ class Level {
                 const tile_id = this.ld[y][x];
                 ctx.drawImage(tiles[tile_id], x * ts, y * ts, ts, ts)
             }
-        }
+        };
+        this.connectedrings.forEach((connection) => {
+            ctx.strokeStyle = '#D00';
+            const px = ts / 32;
+            ctx.lineWidth = px;
+            ctx.beginPath();
+            ctx.setLineDash([px * 5, px * 5]);
+            ctx.moveTo(connection[0][0] * ts + ts / 2, connection[0][1] * ts + ts / 2);
+            ctx.lineTo(connection[1][0] * ts + ts / 2, connection[1][1] * ts + ts / 2);
+            ctx.stroke();
+        });
     }
     export() {
         // Render pushys as start points
         this.pushys.forEach((pushy) => {
             this.ld[pushy.y][pushy.x] = 50;
-        })
+        });
 
         let out = '[';
         for (let y = 0; y < this.height; y ++) {

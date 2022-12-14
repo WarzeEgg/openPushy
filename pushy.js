@@ -1,12 +1,14 @@
 let active_pushys = [
     {color: 'green', controls: ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft']},
-    {color: 'yellow', controls: ['w', 'd', 's', 'a']}
+    {color: 'yellow', controls: ['w', 'd', 's', 'a']},
+    {color: 'red', controls: ['t', 'h', 'g', 'f']},
+    {color: 'cyan', controls: ['i', 'l', 'k', 'j']}
 ];
 
 function mobileMove(key) {
     document.body.requestFullscreen();
     level.pushys.forEach((pushy) => {
-        pushy.move({key: key});
+        pushy.move(key);
     })
 }
 
@@ -24,27 +26,37 @@ class Pushy {
         this.img.height = ts;
         this.img.classList.add('pushy');
         this.footprint = false;
+        this.keys = 0;
         this.electrocuted = false;
         this.cancontrol = true;
+        this.holdingbullet = false;
+        this.inverted = false;
+        this.speedpower = false;
         this.hash = hash;
         con.appendChild(this.img);
         this.render();
-        window.addEventListener('keydown', (event) => this.move(event));
+        window.addEventListener('keydown', (event) => this.move(event.key));
     }
-    move(event) {
+    move(key) {
         if (!this.cancontrol || level.finished || this.hash !== level.hash) {
 
-            if (level.finished && [' ','Enter'].includes(event.key)) {
+            if (level.finished && [' ','Enter'].includes(key)) {
                 nextLevel();
             };
             return;
         };
 
         // Convert the key stroke to an orientation
-        const orientation = this.controls.indexOf(event.key);
+        let orientation = this.controls.indexOf(key);
         if (orientation === -1) {
             return;
         };
+
+        // Turn 180deg if inverted
+        if (this.inverted) {
+            orientation += 2;
+            orientation = orientation % 4;
+        }
 
         // Coordinate changes based on direction
         let diff_x = 0;
@@ -102,6 +114,8 @@ class Pushy {
             case 17: // Ball colors
             case 18:
             case 19:
+            case 31: // Dice goal
+            case 33: // Ring spinning
                 can_move = true;
                 break;
             case 1: // Wall
@@ -132,7 +146,7 @@ class Pushy {
                     for (let y = 0; y < level.ld.length; y ++) {
                         for (let x = 0; x < level.ld[0].length; x ++) {
                             // Check for uncleared conditions
-                            if ([11,13,4,104,204,304,6,106,206,306,8,108,208,308].includes(level.ld[y][x])) {
+                            if ([11,13,4,104,204,304,404,6,106,206,306,406,8,108,208,308,408,24,124,224,324,424,27,127,227,327,427,428,430,31,32,33].includes(level.ld[y][x])) {
                                 will_win = false;
                             }
                         }
@@ -143,18 +157,47 @@ class Pushy {
             case 103: // Occupied box goals by box
             case 203: // Occupied button by box
             case 303: // Occupied button wall by box
+            case 403: // Occupied dice goal by box
             case 4: // Balls
             case 104: // Occupied box goals by balls
             case 204: // Occupied buttons by balls
             case 304: // Occupied button wall by balls
+            case 404: // Occupied dice goal by balls
             case 6:
             case 106:
             case 206:
             case 306:
+            case 406:
             case 8:
             case 108:
             case 208:
             case 308:
+            case 408:
+            case 24: // Target
+            case 124:
+            case 224:
+            case 324:
+            case 424:
+            case 27: // Starbox
+            case 127:
+            case 227:
+            case 327:
+            case 427:
+            case 28: // Dice blue
+            case 128:
+            case 228:
+            case 328:
+            case 428:
+            case 29: // Dice red
+            case 129:
+            case 229:
+            case 329:
+            case 429:
+            case 30: // Dice yellow
+            case 130:
+            case 230:
+            case 330:
+            case 430:
                 let left_behind = 0;
 
                 if (this.footprint) {
@@ -181,7 +224,13 @@ class Pushy {
                     new_target -= 300;
                 }
 
-                if ([0,11,14,16].includes(level.ld[two_y][two_x])) {
+                // Dice goal conversion
+                if (target > 400 && target < 500) {
+                    left_behind = 31;
+                    new_target -= 400;
+                }
+
+                if ([0, 11, 14, 16, 31].includes(level.ld[two_y][two_x])) {
                     // Simply move the object one tile forward
                     can_move = true;
 
@@ -199,6 +248,46 @@ class Pushy {
                     if (level.ld[two_y][two_x] === 16) {
                         new_target += 300;
                     };
+
+                    // Convert tile if pushed onto dice goal
+                    if (level.ld[two_y][two_x] === 31) {
+                        new_target += 400;
+                    };
+
+                    // Cycle dice
+                    let dice_sound = false;
+                    if ([29,30].includes(new_target % 100)) {
+                        new_target --;
+                        dice_sound = 'dicepush';
+                    } else if ([28].includes(new_target % 100)) {
+                        new_target += 2;
+                        dice_sound = 'dicepush';
+                    };
+                    // If dice is red and on dice goal
+                    if (new_target == 429) {
+                        dice_sound = 'dicegoal';
+                    };
+                    // Play the sound when moving dice
+                    if (dice_sound) {
+                        playSound(dice_sound);
+                    };
+
+                    // Starbox logic
+                    if (new_target % 100 === 27) {
+                        let adjacent_boxes = [];
+                        const adjacent_tiles = [[-1,0],[1,0],[0,1],[0,-1]];
+                        adjacent_tiles.forEach((neighbour) => {
+                            if (level.ld[two_y + neighbour[1]][two_x + neighbour[0]] == 27) {
+                                adjacent_boxes.push([two_x + neighbour[0], two_y + neighbour[1]]);
+                            };
+                        });
+                        if (adjacent_boxes.length > 1) {
+                            new_target = 0;
+                            adjacent_boxes.forEach((box) => {
+                                level.ld[box[1]][box[0]] = 0;
+                            })
+                        };
+                    };
                     
                     level.ld[two_y][two_x] = new_target;
                     level.ld[one_y][one_x] = left_behind;
@@ -206,7 +295,7 @@ class Pushy {
                 };
 
                 // Push ball into appropriate goal
-                if ([4,6,8].includes(new_target) && new_target + 1 == level.ld[two_y][two_x]) {
+                if ([4, 6, 8].includes(new_target) && new_target + 1 == level.ld[two_y][two_x]) {
                     can_move = true;
                     level.ld[one_y][one_x] = left_behind;
                     level.render();
@@ -214,7 +303,7 @@ class Pushy {
                 }
 
                 // Push ball into color
-                if ([4,6,8].includes(new_target) && [17,18,19].includes(level.ld[two_y][two_x])) {
+                if ([4, 6, 8].includes(new_target) && [17,18,19].includes(level.ld[two_y][two_x])) {
                     can_move = true;
                     level.ld[one_y][one_x] = left_behind;
 
@@ -258,13 +347,78 @@ class Pushy {
                 break;
             case 20: // Lightning
                 can_move = true;
-
-                if (this.electrocuted) {
-                    // To Do
+                if (!this.electrocuted) {
+                    this.electrocuted = true;
+                    playSound('electro');
+                    this.img.style.filter = 'brightness(0.5)';
+                } else {
                     this.cancontrol = false;
+                    playSound('electrodeath');
+                    this.img.style.opacity = 0.5;
                 };
-
-                this.electrocuted = true;
+                break;
+            case 21: // Key
+                can_move = true;
+                this.keys ++;
+                level.ld[one_y][one_x] = 0;
+                playSound('key');
+                level.render();
+                break;
+            case 22: // Lock
+                if (this.keys > 0) {
+                    this.keys --;
+                    level.ld[one_y][one_x] = 0;
+                    can_move = true;
+                    playSound('door');
+                    level.render();
+                };
+                break;
+            case 23: // Bullet
+                can_move = true;
+                level.ld[one_y][one_x] = 0;
+                if (!this.holdingbullet) {
+                    const img = new Image();
+                    img.src = 'tiles/bulletoverlay.png';
+                    img.id = 'bulletfor' + this.color;
+                    img.width = ts;
+                    img.height = ts;
+                    img.style.display = 'absolute';
+                    con.appendChild(img);
+                }
+                this.holdingbullet = true;
+                playSound('bullet');
+                level.render();
+                break;
+            case 25: // Inverter
+                can_move = true;
+                this.inverted = true;
+                level.ld[one_y][one_x] = 0;
+                playSound('invert');
+                level.render();
+                break;
+            case 26: // Speed power
+                can_move = true;
+                this.speedpower = true;
+                level.ld[one_y][one_x] = 0;
+                playSound('invert');
+                level.render();
+                this.img.style.transition = 'top 0.1s linear, left 0.1s linear';
+                break;
+            case 32: // Ring
+                can_move = true;
+                level.ld[one_y][one_x] = 33;
+                const new_ring = [one_x, one_y];
+                if (level.activering) {
+                    // Remember connection to render a line
+                    level.connectedrings.push([level.activering, new_ring])
+                    // Set to ring blocks
+                    level.ld[level.activering[1]][level.activering[0]] = 34;
+                    level.ld[new_ring[1]][new_ring[0]] = 34;
+                    level.activering = false;
+                } else {
+                    level.activering = new_ring;
+                }
+                level.render();
                 break;
         };
         if (can_move) {
@@ -291,11 +445,20 @@ class Pushy {
         };
         this.orientation = orientation;
         this.render();
+
+        if (this.speedpower && can_move) {
+            this.move(key);
+        }
     }
     render() {
         this.img.style.top = this.y * ts + 'px';
         this.img.style.left = this.x * ts + 'px';
         this.img.style.transform = `rotateZ(${this.orientation * 90}deg)`;
+        if (this.holdingbullet) {
+            const bullet = document.getElementById('bulletfor' + this.color);
+            bullet.style.left = this.x * ts + 'px';
+            bullet.style.top = this.y * ts + 'px';
+        }
     }
     destroy() {
         this.destroy = true;
